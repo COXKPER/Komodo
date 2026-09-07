@@ -2119,8 +2119,8 @@ void process_exit(int exit_code)
 static bool process_wait_selector_matches(process_t *parent, process_t *child, pid_t selector)
 {
     if (!parent || !child || child->parent != parent || !child->task) return false;
-    if (selector > 0) return (pid_t)child->task->tgid == selector;
     if (selector == -1) return true;
+    if (selector > 0) return (pid_t)child->task->tgid == selector;
     if (selector == 0) return child->pgid == parent->pgid;
     if (selector == INT64_MIN) return false;
     return child->pgid == -selector;
@@ -2203,12 +2203,16 @@ void process_child_continued(process_t *child)
 int process_wait_select(pid_t selector, int *wait_status, uint32_t options, pid_t *waited_pid)
 {
     if (waited_pid) *waited_pid = 0;
-    if (!init_process) return -ECHILD;
+    if (!init_process) {
+        return -ECHILD;
+    }
     if (selector == INT64_MIN) return -ESRCH;
     if (options & ~(PROCESS_WAIT_NOHANG | PROCESS_WAIT_STOPPED | PROCESS_WAIT_CONTINUED | PROCESS_WAIT_KEEPEVENT)) return -EINVAL;
 
     process_t *parent = process_current();
-    if (!parent) return -ECHILD;
+    if (!parent) {
+        return -ECHILD;
+    }
 
     for (;;) {
         process_t *zombie             = NULL;

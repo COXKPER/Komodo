@@ -539,7 +539,13 @@ static int64_t sys_wait4(uint64_t pid, uint64_t exit_code, uint64_t options, uin
 
     if (flags & ~(WNOHANG | WUNTRACED | WCONTINUED)) return -EINVAL;
 
-    int64_t traced = ptrace_wait_event((pid_t)pid, &status, flags);
+    /*
+     * x86-64 zero-extends 32-bit -1 to 0xFFFFFFFF.  Sign-extend so that
+     * selector == -1 works correctly in process_wait_selector_matches().
+     */
+    int64_t signed_pid = (int64_t)(int32_t)pid;
+
+    int64_t traced = ptrace_wait_event((pid_t)signed_pid, &status, flags);
     if (traced != -ECHILD) {
         if (traced < 0) return traced;
         if (traced && exit_code && copy_to_user((void *)exit_code, &status, sizeof(status))) return -EFAULT;
@@ -550,7 +556,7 @@ static int64_t sys_wait4(uint64_t pid, uint64_t exit_code, uint64_t options, uin
     if (flags & WUNTRACED) wait_options |= PROCESS_WAIT_STOPPED;
     if (flags & WCONTINUED) wait_options |= PROCESS_WAIT_CONTINUED;
     pid_t waited_pid = 0;
-    int   ret        = process_wait_select((pid_t)pid, &status, wait_options, &waited_pid);
+    int   ret        = process_wait_select((pid_t)signed_pid, &status, wait_options, &waited_pid);
     if (ret < 0) return ret;
     if (!waited_pid) return 0;
     if (exit_code && copy_to_user((void *)exit_code, &status, sizeof(status))) return -EFAULT;
@@ -1175,7 +1181,14 @@ static int64_t sys_uname(uint64_t name, uint64_t arg1, uint64_t arg2, uint64_t a
     memset(&uts, 0, sizeof(uts));
     strncpy(uts.sysname, KERNEL_NAME, sizeof(uts.sysname) - 1);
     strncpy(uts.nodename, "localhost", sizeof(uts.nodename) - 1);
-    strncpy(uts.release, KERNEL_VERSION, sizeof(uts.release) - 1);
+    /*
+     * Release must look like a modern Linux kernel: glibc/musl parse the
+     * version and abort startup ("FATAL: kernel too old") if it reports a
+     * release below their compiled minimum.  This kernel implements the
+     * Linux 6.12 x86-64 syscall ABI, so that is what we advertise here; the
+     * in-tree project version stays in the boot banner.
+     */
+    strncpy(uts.release, "6.12.0", sizeof(uts.release) - 1);
     strncpy(uts.version, BUILD_DATE " " BUILD_TIME, sizeof(uts.version) - 1);
     strncpy(uts.machine, "x86_64", sizeof(uts.machine) - 1);
     strncpy(uts.domainname, "localdomain", sizeof(uts.domainname) - 1);
@@ -2878,7 +2891,12 @@ static int64_t sys_rseq_impl(uint64_t rseq_base, uint64_t rseq_len, uint64_t fla
     (void)arg5;
 
     if (flags & ~0ULL) return -EINVAL;
-    if (rseq_len != sizeof(rseq_layout_t)) return -EINVAL;
+    /*
+     * Linux requires rseq_len >= sizeof(struct rseq) (32 on x86-64).
+     * The kernel's own layout is padded to 64 for alignment, but musl/glibc
+     * register the standard 32-byte ABI area; reject only too-short areas.
+     */
+    if (rseq_len < 32) return -EINVAL;
     if (!rseq_base) return -EINVAL;
 
     /* Write cpu_id to the rseq area */
