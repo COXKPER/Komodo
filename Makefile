@@ -1,7 +1,7 @@
 # =====================================================
 #
 #      Makefile
-#      Uinxed-Kernel compile script
+#      Komodo-Kernel compile script
 #
 #      2024/6/23 By Rainy101112
 #      Copyright (C) 2020 ViudiraTech, based on the Apache 2.0 license.
@@ -36,7 +36,8 @@ HOST_CC        := $(CC)
 HOST_CFLAGS    := -Wall -Wextra -O2
 
 QEMU           := qemu-system-x86_64
-QEMU_FLAGS     := -machine q35 -bios assets/ovmf-code.fd -serial stdio -m 1G
+# Verified invocation: i440FX + KVM gives serial output (q35/OVMF path was silent).
+QEMU_FLAGS     := -m 2G -serial stdio --enable-kvm
 
 TOOL_C_SOURCES := $(wildcard tools/*.c)
 TOOL_TARGETS   := $(TOOL_C_SOURCES:%.c=%.elf)
@@ -44,10 +45,10 @@ TOOL_TARGETS   := $(TOOL_C_SOURCES:%.c=%.elf)
 CC_FLAGS       := -Wall -Wextra -Wno-unused-function -O3 -g3 -m64 -fpie -ffreestanding -fno-optimize-sibling-calls -fno-stack-protector -fno-omit-frame-pointer -mstackrealign -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -mno-80387 -I include -include kernel/config.h -MMD
 LD_FLAGS       := -nostdlib -pie -T assets/linker.ld -m elf_x86_64
 
-all: Uinxed-x64.iso
+all: Komodo-x64.iso
 
 info:
-	$(Q)printf "Uinxed Compiling Script - Apache License Version 2.0.\n\n"
+	$(Q)printf "Komodo Compiling Script - Apache License Version 2.0.\n\n"
 
 %.o: %.c
 	$(Q)printf "  CC      $@\n"
@@ -69,7 +70,7 @@ UxImage: $(TOOL_TARGETS) $(OBJS) $(LIBS)
 	$(Q)printf "  LD      $@\n"
 	$(Q)$(LD) $(LD_FLAGS) -o $@ $(filter-out $(TOOL_TARGETS),$^)
 
-Uinxed-x64.iso: info UxImage
+Komodo-x64.iso: info UxImage
 	$(Q)printf "  XORRISO $@\n\n"
 	$(Q)cp -a assets/Limine iso
 	$(Q)cp $(word 2,$^) iso/EFI/Boot
@@ -85,9 +86,9 @@ Uinxed-x64.iso: info UxImage
 .PHONY: all info help run clean format check gen.clangd menuconfig
 
 help: info
-	$(Q)printf "Uinxed-Kernel Makefile Usage:\n"
+	$(Q)printf "Komodo-Kernel Makefile Usage:\n"
 	$(Q)printf "  make all         - Build the entire project.\n"
-	$(Q)printf "  make run         - Run the Uinxed-x64.iso in QEMU.\n"
+	$(Q)printf "  make run         - Run the Komodo-x64.iso in QEMU.\n"
 	$(Q)printf "  make clean       - Clean all generated files.\n"
 	$(Q)printf "  make format      - Format all source files using clang-format.\n"
 	$(Q)printf "  make check       - Run static code checks using clang-tidy.\n"
@@ -95,11 +96,11 @@ help: info
 	$(Q)printf "  make menuconfig  - Run menuconfig to configure the kernel.\n"
 	$(Q)printf "  make help        - Display this help message.\n"
 
-run: info Uinxed-x64.iso
+run: info Komodo-x64.iso
 	$(QEMU) $(QEMU_FLAGS) -cdrom $(word 2,$^)
 
 clean: info
-	$(Q)$(RM) $(OBJS) $(DEPS) $(ELFS) UxImage Uinxed-x64.iso
+	$(Q)$(RM) $(OBJS) $(DEPS) $(ELFS) UxImage Komodo-x64.iso
 	$(Q)printf "Clean completed.\n"
 
 format: info $(C_SOURCES:%=%.fmt) $(C_HEADERS:%=%.fmt)

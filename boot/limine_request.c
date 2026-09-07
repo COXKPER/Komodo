@@ -9,7 +9,7 @@
  */
 
 #include <boot/limine.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 
 __attribute__((used, section(".limine_requests_start"))) LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".limine_requests")))       LIMINE_BASE_REVISION(0);

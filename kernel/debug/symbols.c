@@ -10,7 +10,7 @@
 
 #include <boot/limine.h>
 #include <kernel/debug/symbols.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/string.h>
 
 /* Get symbol information */

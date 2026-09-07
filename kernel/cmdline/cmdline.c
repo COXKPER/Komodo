@@ -10,7 +10,7 @@
 
 #include <boot/limine.h>
 #include <kernel/cmdline/cmdline.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/string.h>
 
 /* Get the kernel command line */

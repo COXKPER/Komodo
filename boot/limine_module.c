@@ -11,7 +11,7 @@
 #include <boot/limine.h>
 #include <boot/limine_module.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/string.h>
 
 lmodule_t     lmodule[128];

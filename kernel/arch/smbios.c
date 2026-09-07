@@ -10,7 +10,7 @@
 
 #include <arch/smbios.h>
 #include <boot/limine.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <mem/hhdm.h>
 
 /* Query SMBIOS table */

@@ -12,7 +12,7 @@
 #include <arch/cpuid.h>
 #include <boot/limine.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <mem/hhdm.h>
 #include <mem/page.h>
 #include <mem/page_walker.h>

@@ -12,7 +12,7 @@
 #include <arch/smp.h>
 #include <boot/limine.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stdbool.h>
 #include <libs/std/stdlib.h>
 #include <libs/std/string.h>

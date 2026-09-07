@@ -8,7 +8,7 @@
  *
  */
 
-#define UINXED_MODULE_CORE
+#define KOMODO_MODULE_CORE
 #include <arch/smp.h>
 #include <boot/limine.h>
 #include <fs/sysfs/module_sysfs.h>
@@ -17,7 +17,7 @@
 #include <kernel/module/module.h>
 #include <kernel/module/module_elf.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/kobject/kobject.h>
 #include <libs/list/circular_list.h>
 #include <libs/std/math.h>

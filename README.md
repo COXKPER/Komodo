@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://github.com/user-attachments/assets/cb3f4ec8-4504-4fe9-b402-8d1588a986a8" height="200" width="200"/>
-  <h1 align="center">Uinxed-Kernel</h1>
+  <h1 align="center">Komodo-Kernel</h1>
   <h3 align="center">A UNIX-like x86-64 kernel written from scratch.</h3>
 </div>
 
@@ -9,14 +9,14 @@
   <img src="https://img.shields.io/badge/Language-C-orange"/>
   <img src="https://img.shields.io/badge/Hardware-x64-green"/>
   <img src="https://img.shields.io/badge/Firmware-UEFI/Legacy-yellow"/>
-  <a href="https://deepwiki.com/ViudiraTech/Uinxed-Kernel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+  <a href="https://deepwiki.com/ViudiraTech/Komodo-Kernel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki
 </div>
 
 ---
 
 ## Overview
 
-Uinxed is a monolithic, UNIX-like operating system kernel for x86-64, written from scratch in C. It boots through the [Limine](https://limine-bootloader.org/) bootloader in both UEFI and Legacy mode, brings up all cores via SMP, and implements a Linux-compatible syscall ABI (Linux 6.12 x86-64 numbering, syscalls 0-462).
+Komodo is a monolithic, UNIX-like operating system kernel for x86-64, written from scratch in C. It boots through the [Limine](https://limine-bootloader.org/) bootloader in both UEFI and Legacy mode, brings up all cores via SMP, and implements a Linux-compatible syscall ABI (Linux 6.12 x86-64 numbering, syscalls 0-462).
 
 The project aims to build a practical, self-contained kernel with modern design principles: an EEVDF scheduler, a unified page cache with swap support, a full VFS with multiple filesystems, a Linux-style networking and socket layer, and a growing set of device drivers. Unimplemented syscalls return `-ENOSYS`, keeping the ABI surface predictable as it grows.
 
@@ -120,12 +120,12 @@ pacman -Sy make gcc qemu-system xorriso clang-format clang-tidy kconfig-frontend
 ### Build
 
 ```bash
-git clone https://github.com/ViudiraTech/Uinxed-Kernel.git
-cd Uinxed-Kernel
+git clone https://github.com/ViudiraTech/Komodo-Kernel.git
+cd Komodo-Kernel
 make
 ```
 
-This produces `UxImage` (the kernel image) and `Uinxed-x64.iso` (a bootable CD image).
+This produces `UxImage` (the kernel image) and `Komodo-x64.iso` (a bootable CD image).
 
 ### Run in QEMU
 
@@ -146,7 +146,7 @@ make run
 
 **Legacy mode**
 
-1. Burn `Uinxed-x64.iso` to a drive.
+1. Burn `Komodo-x64.iso` to a drive.
 2. Boot from it on a 64-bit machine.
 
 Both modes also work via [Ventoy](https://www.ventoy.net/): copy the ISO onto the drive and select it from the boot menu.
@@ -154,7 +154,7 @@ Both modes also work via [Ventoy](https://www.ventoy.net/): copy the ISO onto th
 ## Project Layout
 
 ```
-Uinxed-Kernel/
+Komodo-Kernel/
 |-- assets/           # Build and boot resources
 |-- boot/             # Boot protocol structures and interfaces
 |-- docs/             # Project documentation and technical notes
@@ -255,7 +255,7 @@ Parts of the codebase reference and reimplement Linux kernel interfaces for inte
 
 ### Disclaimer
 
-Uinxed is an experimental kernel under active development. It is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability or fitness for a particular purpose.
+Komodo is an experimental kernel under active development. It is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability or fitness for a particular purpose.
 
 - The kernel and its filesystem drivers (including the NTFS writer) are **not** safe for production data. Use only with disposable disks or virtual machines.
 - Hardware support is incomplete; running on untested real hardware may cause hangs, crashes, or data loss.

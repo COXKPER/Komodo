@@ -15,7 +15,7 @@
 #include <kernel/errno.h>
 #include <kernel/printk.h>
 #include <kernel/timer/timer.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/kobject/kobject.h>
 #include <libs/std/stddef.h>
 #include <libs/std/stdint.h>
@@ -64,7 +64,7 @@ static ssize_t ostype_show(struct kobject *kobj, struct attribute *attr, char *b
 {
     (void)kobj;
     (void)attr;
-    return (ssize_t)sysfs_emit(buf, "Uinxed\n");
+    return (ssize_t)sysfs_emit(buf, "Komodo\n");
 }
 
 /* Show the kernel release version. */

@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Uinxed is currently under active development, Security updates are provided for recent stable releases:
+Komodo is currently under active development, Security updates are provided for recent stable releases:
 
 |   Version   |     Supported      |
 | -------     | ------------------ |
@@ -12,10 +12,10 @@ Uinxed is currently under active development, Security updates are provided for 
 ## Reporting a Vulnerability
 
 Please do not report security vulnerabilities through public GitHub Issues.
-If you discover a security vulnerability in Uinxed, please report it privatelythrough GitHub Security Advisories.
+If you discover a security vulnerability in Komodo, please report it privatelythrough GitHub Security Advisories.
 When reporting a vulnerability, please include:
 
-- Affected Uinxed version
+- Affected Komodo version
 - CPU architecture (for example x86_64)
 - Affected component (kernel, driver, filesystem, userspace, etc.)
 - Description of the vulnerability
@@ -40,4 +40,4 @@ After a vulnerability has been fixed, relevant details may be publishedthrough a
 
 ## Security Updates
 
-Security fixes will be included in future Uinxed releases and documented inthe release notes.
+Security fixes will be included in future Komodo releases and documented inthe release notes.

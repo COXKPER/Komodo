@@ -23,7 +23,7 @@
 #include <kernel/module/module.h>
 #include <kernel/printk.h>
 #include <kernel/timer/timer.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stddef.h>
 #include <libs/std/stdint.h>
 #include <libs/std/stdlib.h>

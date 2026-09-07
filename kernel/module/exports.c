@@ -8,7 +8,7 @@
  *
  */
 
-#define UINXED_MODULE_CORE
+#define KOMODO_MODULE_CORE
 #include <drivers/base/device.h>
 #include <fs/core/vfs.h>
 #include <kernel/module/module.h>

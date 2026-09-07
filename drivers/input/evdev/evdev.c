@@ -104,7 +104,7 @@ static uint64_t evdev_clock_ns(int clock_type)
     }
 
     /*
-     * CLOCK_MONOTONIC and CLOCK_BOOTTIME currently share Uinxed's
+     * CLOCK_MONOTONIC and CLOCK_BOOTTIME currently share Komodo's
      * monotonic timebase, matching clock_gettime() and timerfd.
      */
     return timer_monotonic_ns();

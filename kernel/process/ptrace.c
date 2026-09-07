@@ -116,7 +116,7 @@ void ptrace_regs_to_frame(syscall_frame_t *frame, const ptrace_user_regs_t *regs
     frame->rip    = regs->rip;
     frame->rflags = (regs->eflags & PTRACE_EFLAGS_USER_MASK) | PTRACE_EFLAGS_FIXED;
     frame->rsp    = regs->rsp;
-    /* User segment selectors are invariant in the Uinxed x86-64 ABI. */
+    /* User segment selectors are invariant in the Komodo x86-64 ABI. */
     frame->cs = 0x1b;
     frame->ss = 0x23;
 }

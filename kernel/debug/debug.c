@@ -18,7 +18,7 @@
 #include <kernel/debug/debug.h>
 #include <kernel/debug/symbols.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stdarg.h>
 #include <process/process.h>
 #include <process/sched.h>

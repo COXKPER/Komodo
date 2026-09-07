@@ -19,7 +19,7 @@
 #include <kernel/debug/debug.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/printk.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stddef.h>
 #include <libs/std/stdint.h>
 #include <libs/std/stdlib.h>

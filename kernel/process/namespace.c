@@ -22,7 +22,7 @@
 #include <process/task.h>
 
 uts_namespace_t init_uts_ns = {
-    .nodename   = "uinxed",
+    .nodename   = "komodo",
     .domainname = "(none)",
     .refcount   = 1,
     .lock       = {.lock = 0},
@@ -270,7 +270,7 @@ static uts_namespace_t *clone_uts_ns(uts_namespace_t *old)
         memcpy(ns->domainname, old->domainname, sizeof(ns->domainname));
         spin_unlock(&old->lock);
     } else {
-        strncpy(ns->nodename, "uinxed", sizeof(ns->nodename) - 1);
+        strncpy(ns->nodename, "komodo", sizeof(ns->nodename) - 1);
         strncpy(ns->domainname, "(none)", sizeof(ns->domainname) - 1);
     }
     return ns;

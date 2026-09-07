@@ -201,7 +201,7 @@ static DEVICE_ATTR(sw, 0444, sw_show, NULL);
 static DEVICE_ATTR(ff, 0444, ff_show, NULL);
 static DEVICE_ATTR(properties, 0444, properties_show, NULL);
 
-/* Keep the flat files for compatibility with early Uinxed user space. */
+/* Keep the flat files for compatibility with early Komodo user space. */
 static struct attribute *input_compat_attributes[] = {
     &dev_attr_name.attr,    &dev_attr_phys.attr, &dev_attr_uniq.attr, &dev_attr_bustype.attr, &dev_attr_vendor.attr,     &dev_attr_product.attr,
     &dev_attr_version.attr, &dev_attr_ev.attr,   &dev_attr_key.attr,  &dev_attr_rel.attr,     &dev_attr_properties.attr, NULL,

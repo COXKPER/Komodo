@@ -1,6 +1,6 @@
 /*
  *
- *      uinxed.h
+ *      komodo.h
  *      Kernel description header file
  *
  *      2024/7/23 By Rainy101112
@@ -8,12 +8,12 @@
  *
  */
 
-#ifndef INCLUDE_UINXED_H_
-#define INCLUDE_UINXED_H_
+#ifndef INCLUDE_KOMODO_H_
+#define INCLUDE_KOMODO_H_
 
 #define BUILD_DATE     __DATE__
 #define BUILD_TIME     __TIME__
-#define KERNEL_NAME    "Uinxed"
+#define KERNEL_NAME    "Komodo"
 #define KERNEL_VERSION "0.4.0"
 
 /* Compiler judgment */
@@ -50,4 +50,4 @@ void executable_entry(void);
 /* Kernel entry */
 void kernel_entry(void);
 
-#endif // INCLUDE_UINXED_H_
+#endif // INCLUDE_KOMODO_H_

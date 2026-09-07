@@ -19,7 +19,7 @@
 #include <kernel/errno.h>
 #include <kernel/printk.h>
 #include <kernel/timer/timer.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/gfx/gfx_proc.h>
 #include <libs/std/stdbool.h>
 #include <libs/std/stddef.h>

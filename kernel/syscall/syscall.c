@@ -29,7 +29,7 @@
 #include <kernel/printk.h>
 #include <kernel/timer/timer.h>
 #include <process/namespace.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stddef.h>
 #include <libs/std/stdint.h>
 #include <libs/std/stdlib.h>
@@ -48,6 +48,7 @@
 #include <process/uaccess.h>
 #include <security/seccomp.h>
 #include <sync/signal.h>
+#include <kernel/async/rrq.h>
 #include <syscall/eventfd.h>
 #include <syscall/fcntl.h>
 #include <syscall/memfd.h>
@@ -6016,6 +6017,9 @@ void syscall_init_cpu(void)
 void syscall_init(void)
 {
     register_interrupt_handler(SYSCALL_VECTOR, (void *)syscall_entry, 0, 0xee);
+
+    /* Kernel request/response registry (async helper) + boot self-test. */
+    rrq_init();
 
     cpu_processor_t *cpu = get_current_cpu();
     if (!cpu) panic("syscall: BSP per-CPU state is unavailable.");

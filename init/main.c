@@ -1,7 +1,7 @@
 /*
  *
  *      main.c
- *      Uinxed-kernel entry
+ *      Komodo-kernel entry
  *
  *      2024/6/23 By MicroFish
  *      Copyright (C) 2020 ViudiraTech, based on the Apache 2.0 license.
@@ -85,7 +85,7 @@
 #include <kernel/module/module.h>
 #include <kernel/printk.h>
 #include <kernel/timer/timer.h>
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/string.h>
 #include <mem/frame.h>
 #include <mem/heap.h>

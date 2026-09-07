@@ -11,7 +11,7 @@
 #ifndef INCLUDE_MODULE_H_
 #define INCLUDE_MODULE_H_
 
-#include <kernel/uinxed.h>
+#include <kernel/komodo.h>
 #include <libs/std/stddef.h>
 #include <libs/std/stdint.h>
 
@@ -173,7 +173,7 @@ int module_set_signature_verifier(module_signature_verifier_t verifier);
 #define module_init(function) int init_module(void) __attribute__((alias(#function)))
 #define module_exit(function) void cleanup_module(void) __attribute__((alias(#function)))
 
-#ifndef UINXED_MODULE_CORE
+#ifndef KOMODO_MODULE_CORE
 __attribute__((weak, used, section(".gnu.linkonce.this_module"))) struct module __this_module;
 #    define THIS_MODULE (&__this_module)
 static const char __module_vermagic[] __module_used __module_section(".modinfo") = "vermagic=" KERNEL_VERSION;
