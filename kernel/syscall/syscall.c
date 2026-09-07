@@ -49,6 +49,7 @@
 #include <security/seccomp.h>
 #include <sync/signal.h>
 #include <kernel/async/rrq.h>
+#include <kernel/cmdline/cmdline.h>
 #include <syscall/eventfd.h>
 #include <syscall/fcntl.h>
 #include <syscall/memfd.h>
@@ -5488,6 +5489,17 @@ static const char *syscall_slow_name(uint64_t n)
 
 static void syscall_slow_probe(uint64_t num, uint64_t elapsed, task_t *task, int64_t retval)
 {
+    /*
+     * Off by default; enable with "sysdbg=1" on the kernel command line.
+     * Parsed lazily once on the first slow-syscall probe; -1 means "not
+     * parsed yet" so the disabled default never re-scans the cmdline.
+     */
+    static int sysdbg = -1;
+    if (sysdbg < 0) {
+        char val[8];
+        sysdbg = cmdline_get_option("sysdbg", val, sizeof(val)) && val[0] == '1';
+    }
+    if (!sysdbg) return;
     if (elapsed < SYSCALL_SLOW_THRESHOLD_TICKS) return;
 
     static uint64_t last_log;
