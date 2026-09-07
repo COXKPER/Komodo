@@ -70,47 +70,25 @@ KomImage: $(TOOL_TARGETS) $(OBJS) $(LIBS)
 	$(Q)printf "  LD      $@\n"
 	$(Q)$(LD) $(LD_FLAGS) -o $@ $(filter-out $(TOOL_TARGETS),$^)
 
-# Optional: pack a bootable ISO from the built kernel + initramfs (xorriso).
-# The iso/ staging dir is created and removed within the recipe so the
-# Komodo-x64.iso product name never collides with a target var.
-ISO_STAGE := iso
-iso: KomImage
-	$(Q)printf "  XORRISO Komodo-x64.iso\n\n"
-	$(Q)cp -a assets/Limine $(ISO_STAGE)
-	$(Q)cp KomImage $(ISO_STAGE)/EFI/Boot
-	$(Q)if [ -f initramfs.cpio ]; then cp initramfs.cpio $(ISO_STAGE)/; echo "  INITRD  initramfs.cpio"; fi
-	$(Q)xorriso -as mkisofs -R -r -J -b Limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
-                -hfsplus -apm-block-size 2048 -efi-boot-part --efi-boot-image --protective-msdos-label \
-                --efi-boot Limine/limine-uefi-cd.bin -o Komodo-x64.iso $(ISO_STAGE)
-	$(Q)$(RM) -rf $(ISO_STAGE)
-	$(Q)printf "Kernel: KomImage is ready.\n"
-	$(Q)printf "Image: Komodo-x64.iso is ready.\n"
-	$(Q)printf "Compilation complete.\n"
-
-iso-clean: info
-	$(Q)$(RM) -rf iso Komodo-x64.iso
-	$(Q)printf "ISO artifacts cleaned.\n"
-
-.PHONY: all info help run iso iso-clean clean format check gen.clangd menuconfig
+.PHONY: all info help run clean format check gen.clangd menuconfig
 
 help: info
 	$(Q)printf "Komodo-Kernel Makefile Usage:\n"
 	$(Q)printf "  make all         - Build the kernel image (KomImage).\n"
 	$(Q)printf "  make run         - Run KomImage + initramfs.cpio in QEMU.\n"
-	$(Q)printf "  make iso         - Build a bootable Komodo-x64.iso (optional).\n"
-	$(Q)printf "  make iso-clean   - Remove ISO build artifacts.\n"
 	$(Q)printf "  make clean       - Clean all generated files.\n"
 	$(Q)printf "  make format      - Format all source files using clang-format.\n"
 	$(Q)printf "  make check       - Run static code checks using clang-tidy.\n"
 	$(Q)printf "  make gen.clangd  - Generate .clangd configuration file.\n"
 	$(Q)printf "  make menuconfig  - Run menuconfig to configure the kernel.\n"
 	$(Q)printf "  make help        - Display this help message.\n"
+	$(Q)printf "\nISO production lives at the EntoriNext root (see Makefile there).\n"
 
 run: info KomImage
 	$(QEMU) $(QEMU_FLAGS) -kernel KomImage -initrd initramfs.cpio
 
 clean: info
-	$(Q)$(RM) $(OBJS) $(DEPS) $(ELFS) KomImage initramfs.cpio Komodo-x64.iso
+	$(Q)$(RM) $(OBJS) $(DEPS) $(ELFS) KomImage initramfs.cpio
 	$(Q)printf "Clean completed.\n"
 
 format: info $(C_SOURCES:%=%.fmt) $(C_HEADERS:%=%.fmt)

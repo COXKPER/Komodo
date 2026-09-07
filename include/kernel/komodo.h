@@ -14,7 +14,14 @@
 #define BUILD_DATE     __DATE__
 #define BUILD_TIME     __TIME__
 #define KERNEL_NAME    "Komodo"
-#define KERNEL_VERSION "0.4.0"
+/*
+ * Version scheme: (total-commit).(changes).(updates)
+ *   total-commit — `git rev-list --count HEAD` at release time
+ *   changes      — number of feature/major changes since last update bump
+ *   updates      — number of maintenance releases
+ * See versioning.md at the EntoriNext root for the full policy.
+ */
+#define KERNEL_VERSION "630.0.0"
 
 /* Compiler judgment */
 #if defined(__clang__)

@@ -53,7 +53,7 @@ AGENTS.md
 *.pdb
 
 # Project Objectives
-UxImage
+KomImage
 *.iso
 
 # Clangd
