@@ -372,9 +372,12 @@ int pagecache_init(const pagecache_allocator_t *allocator, size_t max_pages)
         plogk("pagecache: Init with invalid allocator or zero max_pages.\n");
         return -EINVAL;
     }
-    if (__atomic_load_n(&pagecache.initialized, __ATOMIC_ACQUIRE)) {
-        plogk("pagecache: Init called twice (already initialized)\n");
-        return -EBUSY;
+    {
+        uint32_t expected = 0;
+        if (!__atomic_compare_exchange_n(&pagecache.initialized, &expected, 1, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+            plogk("pagecache: Init called twice (already initialized)\n");
+            return -EBUSY;
+        }
     }
     memset(&pagecache, 0, sizeof(pagecache));
     pagecache.allocator = *allocator;
@@ -563,11 +566,12 @@ uint64_t pagecache_page_index(pagecache_page_t *page)
 void pagecache_mark_dirty(pagecache_page_t *page)
 {
     if (!page) return;
-    if (!(page->flags & PC_PAGE_DIRTY)) {
-        page->flags |= PC_PAGE_DIRTY | PC_PAGE_WAS_DIRTY;
-        pc_stat_inc(&pagecache.stats.dirty);
+    uint32_t old = __atomic_load_n(&page->flags, __ATOMIC_ACQUIRE);
+    if (!(old & PC_PAGE_DIRTY)) {
+        uint32_t prev = __atomic_fetch_or(&page->flags, PC_PAGE_DIRTY | PC_PAGE_WAS_DIRTY, __ATOMIC_ACQ_REL);
+        if (!(prev & PC_PAGE_DIRTY)) pc_stat_inc(&pagecache.stats.dirty);
     }
-    page->flags |= PC_PAGE_UPTODATE | PC_PAGE_REFERENCED;
+    __atomic_fetch_or(&page->flags, PC_PAGE_UPTODATE | PC_PAGE_REFERENCED, __ATOMIC_RELAXED);
 }
 
 /* Prefetch count pages starting at first, returning the first error if strict. */
@@ -829,8 +833,14 @@ int pagecache_writeback_all(uint32_t flags)
     size_t count = 0;
     for (pagecache_mapping_t *mapping = pagecache.mappings; mapping; mapping = mapping->global_next)
         if (!mapping->dying) count++;
-    size_t                slots    = count ? count : 1;
-    pagecache_mapping_t **mappings = (pagecache_mapping_t **)malloc(slots * sizeof(*mappings)); // NOLINT(bugprone-sizeof-expression)
+    size_t slots = count ? count : 1;
+    size_t bytes;
+    if (__builtin_mul_overflow(slots, sizeof(pagecache_mapping_t *), &bytes) || slots > 1000000) {
+        plogk("pagecache: Writeback_all slots overflow %zu\n", slots);
+        pc_unlock(&pagecache.lock);
+        return -EOVERFLOW;
+    }
+    pagecache_mapping_t **mappings = (pagecache_mapping_t **)malloc(bytes); // NOLINT(bugprone-sizeof-expression)
     if (!mappings) {
         plogk("pagecache: Writeback_all array alloc failed for %zu mappings.\n", count);
         pc_unlock(&pagecache.lock);
@@ -946,6 +956,7 @@ int pagecache_truncate(pagecache_mapping_t *mapping, uint64_t size)
             if (page) {
                 pc_lock(&page->lock);
                 memset((char *)page->data + size % PAGECACHE_PAGE_SIZE, 0, PAGECACHE_PAGE_SIZE - size % PAGECACHE_PAGE_SIZE);
+                pagecache_mark_dirty(page);
                 pc_unlock(&page->lock);
                 pagecache_put_page(page);
             }
@@ -975,7 +986,13 @@ void pagecache_mapping_pin(pagecache_mapping_t *mapping)
 /* Drop a pin previously taken on a mapping. */
 void pagecache_mapping_unpin(pagecache_mapping_t *mapping)
 {
-    if (mapping) __atomic_sub_fetch(&mapping->pins, 1, __ATOMIC_ACQ_REL);
+    if (!mapping) return;
+    uint32_t old = __atomic_load_n(&mapping->pins, __ATOMIC_ACQUIRE);
+    if (!old) {
+        plogk("pagecache: Unpin of mapping %p with zero pins\n", mapping);
+        return;
+    }
+    __atomic_sub_fetch(&mapping->pins, 1, __ATOMIC_ACQ_REL);
 }
 
 /* Prefetch the pages covering [offset, offset + size). */

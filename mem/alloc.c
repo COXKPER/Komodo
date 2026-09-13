@@ -381,9 +381,10 @@ static void *cache_alloc_requested(slab_cache_t *cache, size_t requested)
     cache->allocations++;
     list_insert(cache, slab, slab->inuse == slab->object_count ? SLAB_LIST_FULL : SLAB_LIST_PARTIAL);
 
-    void *result = (uint8_t *)object + cache->payload_offset;
-    if (cache->ctor) cache->ctor(result);
+    void *result    = (uint8_t *)object + cache->payload_offset;
+    slab_ctor_t ctor = cache->ctor;
     spin_unlock_irqrestore(&cache->lock, rflags);
+    if (ctor) ctor(result);
     return result;
 }
 
@@ -420,8 +421,8 @@ static int cache_free_object(slab_cache_t *expected, slab_header_t *slab, void *
         return -2;
     }
 
-    size_t requested = object->requested;
-    if (cache->dtor) cache->dtor(pointer);
+    size_t      requested = object->requested;
+    slab_dtor_t dtor      = cache->dtor;
     memset(pointer, FREE_POISON, cache->object_size);
     list_remove(cache, slab);
     object->requested = 0;
@@ -436,6 +437,7 @@ static int cache_free_object(slab_cache_t *expected, slab_header_t *slab, void *
     /* Retain one warm empty slab per cache and reclaim surplus immediately. */
     if (!slab->inuse && cache->empty_count > 1) slab_release_locked(cache, slab);
     spin_unlock_irqrestore(&cache->lock, rflags);
+    if (dtor) dtor(pointer);
     if (released) *released = requested;
     return 0;
 }
@@ -578,7 +580,7 @@ size_t usable_size(void *pointer)
         slab_cache_t *cache         = slab->cache;
         uintptr_t     payload_start = slab->object_start + cache->payload_offset;
         uintptr_t     address       = (uintptr_t)pointer;
-        if (address < payload_start || (address - payload_start) % cache->stride) return 0;
+        if (address < payload_start || (address - payload_start) % cache->stride || (address - payload_start) / cache->stride >= slab->object_count) return 0;
         slab_object_header_t *object = (void *)(address - cache->payload_offset);
         if (object->magic != SLAB_OBJECT_MAGIC || object->cookie != object_cookie(object) || object->state != OBJECT_ALLOCATED) return 0;
         return cache->object_size;
@@ -675,11 +677,27 @@ void *realloc(void *pointer, size_t new_size)
         if (pointer_owner(pointer, &owner_index, &owner)) return NULL;
         (void)owner_index;
         slab_header_t *slab = owner;
-        if (slab->magic == SLAB_MAGIC) {
-            slab_object_header_t *object = (void *)((uintptr_t)pointer - slab->cache->payload_offset);
-            object->requested            = new_size;
+        if (slab->magic == SLAB_MAGIC && slab->cookie == slab_cookie(slab)) {
+            slab_cache_t *cache = slab->cache;
+            if (!cache) return NULL;
+            uintptr_t payload_start = slab->object_start + cache->payload_offset;
+            uintptr_t address       = (uintptr_t)pointer;
+            if (address < payload_start || (address - payload_start) % cache->stride || (address - payload_start) / cache->stride >= slab->object_count) return NULL;
+            slab_object_header_t *object = (void *)((uintptr_t)pointer - cache->payload_offset);
+            if (object->magic != SLAB_OBJECT_MAGIC || object->cookie != object_cookie(object) || object->state != OBJECT_ALLOCATED) return NULL;
+            uint64_t rflags   = spin_lock_irqsave(&cache->lock);
+            if (object->state != OBJECT_ALLOCATED || object->magic != SLAB_OBJECT_MAGIC || object->cookie != object_cookie(object)) {
+                spin_unlock_irqrestore(&cache->lock, rflags);
+                return NULL;
+            }
+            object->requested = new_size;
+            spin_unlock_irqrestore(&cache->lock, rflags);
+        } else if (slab->magic == SLAB_MAGIC) {
+            return NULL;
         } else {
-            ((large_header_t *)owner)->requested = new_size;
+            large_header_t *large = owner;
+            if (large->magic != LARGE_MAGIC || large->cookie != large_cookie(large) || large->state != LARGE_ALLOCATED || large->user != pointer) return NULL;
+            large->requested = new_size;
         }
         if (new_size > old_size)
             stat_add(&heap.allocated_bytes, new_size - old_size);

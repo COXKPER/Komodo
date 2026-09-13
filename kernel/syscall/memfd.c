@@ -334,8 +334,9 @@ int64_t sys_memfd_create(uint64_t name, uint64_t flags, uint64_t arg2, uint64_t 
 
     int fd = process_fd_install(proc, node, O_RDWR | ((flags & MFD_CLOEXEC) ? O_CLOEXEC : 0));
     if (fd < 0) {
-        memfd_free(file);
+        node->handle = NULL;
         vfs_free(node);
+        memfd_free(file);
         plogk("memfd: Create fd install failed (name_len=%d, ret=%d)\n", name_len, fd);
     }
     return fd;
@@ -444,7 +445,17 @@ int memfd_fallocate(vfs_node_t node, uint32_t mode, uint64_t offset, uint64_t le
     }
     for (size_t page = offset / PAGE_4K_SIZE; page <= (end - 1) / PAGE_4K_SIZE; page++) {
         if (mode & FALLOC_FL_PUNCH_HOLE) {
-            if (page < file->page_count && file->pages[page]) memset(phys_to_virt(file->pages[page]), 0, PAGE_4K_SIZE);
+            if (page < file->page_count && file->pages[page]) {
+                size_t page_start = page * PAGE_4K_SIZE;
+                size_t zero_start = offset > page_start ? (size_t)(offset - page_start) : 0;
+                size_t zero_end   = end < page_start + PAGE_4K_SIZE ? (size_t)(end - page_start) : PAGE_4K_SIZE;
+                if (zero_start == 0 && zero_end == PAGE_4K_SIZE) {
+                    free_frames(file->pages[page], 1);
+                    file->pages[page] = 0;
+                } else {
+                    memset((uint8_t *)phys_to_virt(file->pages[page]) + zero_start, 0, zero_end - zero_start);
+                }
+            }
         } else {
             int ret = memfd_allocate_page(file, page);
             if (ret) {
@@ -452,7 +463,12 @@ int memfd_fallocate(vfs_node_t node, uint32_t mode, uint64_t offset, uint64_t le
                 plogk("memfd: Fallocate page alloc failed (offset=%lu, length=%lu, ret=%d)\n", (unsigned long)offset, (unsigned long)length, ret);
                 return ret;
             }
-            if (mode & FALLOC_FL_ZERO_RANGE) memset(phys_to_virt(file->pages[page]), 0, PAGE_4K_SIZE);
+            if (mode & FALLOC_FL_ZERO_RANGE) {
+                size_t page_start = page * PAGE_4K_SIZE;
+                size_t zero_start = offset > page_start ? (size_t)(offset - page_start) : 0;
+                size_t zero_end   = end < page_start + PAGE_4K_SIZE ? (size_t)(end - page_start) : PAGE_4K_SIZE;
+                memset((uint8_t *)phys_to_virt(file->pages[page]) + zero_start, 0, zero_end - zero_start);
+            }
         }
     }
     if (!(mode & FALLOC_FL_KEEP_SIZE) && end > file->size) file->size = end;

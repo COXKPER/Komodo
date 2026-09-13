@@ -31,6 +31,7 @@ void *phys_to_virt(uint64_t phys_addr)
     if (!hhdm_request.response) krn_halt();
     if (phys_addr >= (1ULL << get_cpu_phys_bits())) { // Check if physical address is valid
         plogk("hhdm: Physical address 0x%016llx exceeds physical address space.\n", phys_addr);
+        return NULL;
     }
     virt_addr.val = phys_addr + hhdm_request.response->offset;
     return virt_addr.ptr;
@@ -43,6 +44,7 @@ void *virt_to_phys(uint64_t virt_addr)
     if (!hhdm_request.response) krn_halt();
     if (virt_addr < hhdm_request.response->offset) { // Check if virtual address is in HHDM region
         plogk("hhdm: Virtual address 0x%016llx is not in HHDM region.\n", virt_addr);
+        return NULL;
     }
     phys_addr.val = virt_addr - hhdm_request.response->offset;
     return phys_addr.ptr;

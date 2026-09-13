@@ -75,10 +75,9 @@ size_t bitmap_find_range(const bitmap_t *bitmap, size_t length, int value)
     uint8_t byte_match = value ? (uint8_t)-1 : 0;
     for (size_t byte_idx = 0; byte_idx < bitmap->length / 8; byte_idx++) {
         size_t byte = bitmap->buffer[byte_idx];
-        if (byte == !byte_match) {
+        if (byte == (uint8_t)~byte_match) {
             count = 0;
         } else if (byte == byte_match) {
-            if (length < 8) return byte_idx * 8;
             if (count == 0) start_index = byte_idx * 8;
             count += 8;
             if (count >= length) return start_index;

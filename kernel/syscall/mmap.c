@@ -154,6 +154,7 @@ static int vma_remove_range(process_t *proc, uintptr_t start, uintptr_t end)
 /* Unmap physical pages in a range from the page directory */
 static int unmap_physical_pages(process_t *proc, uintptr_t start, size_t length)
 {
+    if (start > SIZE_MAX - length) return -EINVAL;
     uintptr_t end = ALIGN_UP(start + length, PAGE_4K_SIZE);
     for (uintptr_t va = start; va < end; va += PAGE_4K_SIZE)
         if (page_unmap_release(proc->user_page_dir, va) < 0) return -ENOMEM;
@@ -178,8 +179,8 @@ static vm_area_t *vma_split_locked(process_t *proc, vm_area_t *vma, uintptr_t sp
         memfd_vma_retain(right->vm_file, right->flags);
     }
     if (right->type == VM_REGION_SHM && right->vm_private_data && sysv_shm_vma_get(right->vm_private_data, proc->task ? (uint32_t)proc->task->pid : 0)) goto fail_backing;
-    /* Driver-backed mapping (DRM GEM): give the right half its own ref. */
-    vma_private_get(right);
+    else
+        vma_private_get(right);
 
     vma->end    = split;
     right->next = vma->next;
@@ -766,15 +767,22 @@ int64_t sys_mremap(uint64_t old_addr, uint64_t old_len, uint64_t new_len, uint64
             return -ENOMEM;
         }
 
-        vfs_node_t vm_file  = vma->vm_file;
+        vfs_node_t vm_file  = vfs_node_retain(vma->vm_file);
         vm_flags_t vm_flags = vma->flags;
         uint64_t   vm_pgoff = vma->vm_pgoff;
         spin_unlock(&proc->mmap_lock);
+        if (!vm_file) return -ENOMEM;
 
         uintptr_t target = process_find_free_vma_range(proc, new_pages);
-        if (!target) return -ENOMEM;
+        if (!target) {
+            vfs_close(vm_file);
+            return -ENOMEM;
+        }
         int result = memfd_map(vm_file, proc, target, new_pages, vm_pgoff * PAGE_4K_SIZE, vm_flags);
-        if (result) return result;
+        if (result) {
+            vfs_close(vm_file);
+            return result;
+        }
 
         spin_lock(&proc->mmap_lock);
         vma = proc->mmap_list;
@@ -787,6 +795,7 @@ int64_t sys_mremap(uint64_t old_addr, uint64_t old_len, uint64_t new_len, uint64
             spin_unlock(&proc->mmap_lock);
             (void)unmap_physical_pages(proc, target, new_pages);
             memfd_vma_release(vm_file, vm_flags);
+            vfs_close(vm_file);
             return -ENOMEM;
         }
 
@@ -795,6 +804,7 @@ int64_t sys_mremap(uint64_t old_addr, uint64_t old_len, uint64_t new_len, uint64
             spin_unlock(&proc->mmap_lock);
             (void)unmap_physical_pages(proc, target, new_pages);
             memfd_vma_release(vm_file, vm_flags);
+            vfs_close(vm_file);
             return result;
         }
 
@@ -809,6 +819,7 @@ int64_t sys_mremap(uint64_t old_addr, uint64_t old_len, uint64_t new_len, uint64
         vma->next = *link;
         *link     = vma;
         memfd_vma_release(vm_file, vm_flags);
+        vfs_close(vm_file);
         spin_unlock(&proc->mmap_lock);
         return (int64_t)target;
     }
@@ -837,8 +848,11 @@ int sys_mincore(uint64_t addr, uint64_t length, uint64_t vec)
     process_t *proc = process_current();
     if (!proc) return -ESRCH;
     if (!vec) return -EFAULT;
+    if (!length) return -EINVAL;
+    if (addr & (PAGE_4K_SIZE - 1)) return -EINVAL;
+    if (length > UINT64_MAX - addr) return -EINVAL;
 
-    size_t   pages = ALIGN_UP(length, PAGE_4K_SIZE) / PAGE_4K_SIZE;
+    size_t pages = ALIGN_UP(length, PAGE_4K_SIZE) / PAGE_4K_SIZE;
     uint8_t *residency;
 
     residency = malloc(pages);

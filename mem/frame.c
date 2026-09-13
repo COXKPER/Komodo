@@ -300,8 +300,8 @@ void init_frame(void)
     frame_allocator.usable_frames   = frame_allocator.buddy.free_pages;
     frame_allocator.metadata_frames = metadata_frame_count;
 
-    log_buffer_write(&frame_log, "frame: Total physical frames = 0x%08x (%d KiB)\n", origin_frames, (origin_frames * 4096) >> 10);
-    log_buffer_write(&frame_log, "frame: Available frames after buddy metadata = 0x%08x (%d KiB)\n", frame_allocator.usable_frames, (frame_allocator.usable_frames * 4096) >> 10);
+    log_buffer_write(&frame_log, "frame: Total physical frames = 0x%08zx (%zu KiB)\n", origin_frames, origin_frames * 4);
+    log_buffer_write(&frame_log, "frame: Available frames after buddy metadata = 0x%08zx (%zu KiB)\n", frame_allocator.usable_frames, frame_allocator.usable_frames * 4);
 }
 
 /* Allocate count frames aligned to 2^alignment_order pages. */
@@ -501,10 +501,8 @@ void print_memory_map(void)
 
     for (uint64_t i = 0; i < memmap_request.response->entry_count; i++) {
         struct limine_memmap_entry *entry  = memmap_request.response->entries[i];
-        uint64_t                    base   = entry->base;
-        uint64_t                    length = entry->length;
-        uint64_t                    end    = base + length - 1;
-
+        uint64_t    base   = entry->base;
+        uint64_t    length = entry->length;
         const char *type_str;
         switch (entry->type) {
             case LIMINE_MEMMAP_USABLE :
@@ -535,7 +533,12 @@ void print_memory_map(void)
                 type_str = "unknown";
                 break;
         }
-        plogk("  [mem %p-%p] (%*llu KiB) %s\n", base, end, 9, length / 1024, type_str);
+        if (!length)
+            plogk("  [mem %p] (0 KiB) %s\n", base, type_str);
+        else {
+            uint64_t end = base + length - 1;
+            plogk("  [mem %p-%p] (%*llu KiB) %s\n", base, end, 9, length / 1024, type_str);
+        }
     }
     plogk(" </MEMMAP>\n");
 }

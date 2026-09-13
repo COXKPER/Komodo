@@ -57,6 +57,7 @@ __asm__(".text\n"
         ".global __uaccess_copy_fault\n"
         ".type __uaccess_copy_fault, @function\n"
         "__uaccess_copy_fault:\n"
+        "movl $-14, %eax\n"
         "ret\n"
         ".size __uaccess_copy_fault, .-__uaccess_copy_fault\n");
 
@@ -111,6 +112,7 @@ int user_range_ok(const void *uaddr, size_t size)
     uintptr_t addr = (uintptr_t)uaddr;
     if (!size) return 1;
     if (!addr) return 0;
+    if (size > PROCESS_USER_STACK_TOP) return 0;
     if (addr >= PROCESS_USER_STACK_TOP) return 0;
     if (addr > PROCESS_USER_STACK_TOP - size) return 0;
     return 1;
@@ -408,6 +410,7 @@ int clear_user_process(process_t *proc, void *dst, size_t size)
 int strnlen_user(const char *src, size_t max_size)
 {
     if (!src || !max_size) return -EFAULT;
+    if (max_size > (size_t)INT32_MAX) max_size = (size_t)INT32_MAX;
 
     char   buffer[256];
     size_t copied = 0;
@@ -429,6 +432,7 @@ int strnlen_user(const char *src, size_t max_size)
 int strncpy_from_user(char *dst, const char *src, size_t max_size)
 {
     if (!dst || !src || !max_size) return -EFAULT;
+    if (max_size > (size_t)INT32_MAX) max_size = (size_t)INT32_MAX;
 
     char   buffer[256];
     size_t copied = 0;
