@@ -64,6 +64,8 @@
 #define SYSCALL_IO_CHUNK 16384
 #define EXEC_STRING_MAX  (PROCESS_STACK_SIZE / 2)
 
+static int sysdbg_enabled(void);
+
 #define SYSCALL_STRINGIFY_INNER(value) #value
 #define SYSCALL_STRINGIFY(value)       SYSCALL_STRINGIFY_INNER(value)
 
