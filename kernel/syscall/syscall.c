@@ -4169,7 +4169,7 @@ static int64_t do_execve_resolved(const char *path, vfs_node_t initial_node, cha
             node = vfs_open_checked(kpath, &lookup_error);
         }
         if (!node) {
-            plogk("exec-dbg: open '%s' failed (errno=%d)\n", kpath, lookup_error);
+            if (sysdbg_enabled()) plogk("exec-dbg: open '%s' failed (errno=%d)\n", kpath, lookup_error);
             free_string_array(kargv);
             free_string_array(kenvp);
             return lookup_error;
@@ -5487,19 +5487,20 @@ static const char *syscall_slow_name(uint64_t n)
 #define SYSCALL_SLOW_THRESHOLD_TICKS (TIMER_HZ / 20)
 #define SYSCALL_SLOW_RATELIMIT_TICKS (TIMER_HZ / 10)
 
+static int sysdbg_cached = -1;
+
+static int sysdbg_enabled(void)
+{
+    if (sysdbg_cached < 0) {
+        char val[8];
+        sysdbg_cached = cmdline_get_option("sysdbg", val, sizeof(val)) && val[0] == '1';
+    }
+    return sysdbg_cached;
+}
+
 static void syscall_slow_probe(uint64_t num, uint64_t elapsed, task_t *task, int64_t retval)
 {
-    /*
-     * Off by default; enable with "sysdbg=1" on the kernel command line.
-     * Parsed lazily once on the first slow-syscall probe; -1 means "not
-     * parsed yet" so the disabled default never re-scans the cmdline.
-     */
-    static int sysdbg = -1;
-    if (sysdbg < 0) {
-        char val[8];
-        sysdbg = cmdline_get_option("sysdbg", val, sizeof(val)) && val[0] == '1';
-    }
-    if (!sysdbg) return;
+    if (!sysdbg_enabled()) return;
     if (elapsed < SYSCALL_SLOW_THRESHOLD_TICKS) return;
 
     static uint64_t last_log;
