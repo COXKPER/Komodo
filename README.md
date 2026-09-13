@@ -1,11 +1,16 @@
 # Komodo
 
-A Linux-compatible monolithic kernel for x86-64, written from scratch in C.
+A Linux-compatible hybrid kernel for x86-64, written from scratch in C.
 
 Komodo is part of the **EntoriNext** project. It boots through the
 [Limine](https://limine-bootloader.org/) bootloader (UEFI and Legacy), brings up
 all cores via SMP, and exposes a **Linux-compatible syscall ABI** (Linux 6.12
 x86-64 numbering, syscalls 0–462). Unimplemented syscalls return `-ENOSYS`.
+
+A **hybrid** architecture: the core kernel (scheduler, VM, VFS, IPC, syscall
+ABI) is monolithic for performance, while drivers and filesystem backends can
+run as userspace services via callback interfaces — mesaging between kernel
+and services uses async request/response queues.
 
 The kernel is development-focused: an EEVDF scheduler, page cache with swap, a
 VFS with multiple filesystems, an in-house TCP/IP stack, and a Linux-style ABI

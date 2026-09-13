@@ -1182,14 +1182,7 @@ static int64_t sys_uname(uint64_t name, uint64_t arg1, uint64_t arg2, uint64_t a
     memset(&uts, 0, sizeof(uts));
     strncpy(uts.sysname, KERNEL_NAME, sizeof(uts.sysname) - 1);
     strncpy(uts.nodename, "localhost", sizeof(uts.nodename) - 1);
-    /*
-     * Release must look like a modern Linux kernel: glibc/musl parse the
-     * version and abort startup ("FATAL: kernel too old") if it reports a
-     * release below their compiled minimum.  This kernel implements the
-     * Linux 6.12 x86-64 syscall ABI, so that is what we advertise here; the
-     * in-tree project version stays in the boot banner.
-     */
-    strncpy(uts.release, "6.12.0", sizeof(uts.release) - 1);
+    strncpy(uts.release, KERNEL_VERSION, sizeof(uts.release) - 1);
     strncpy(uts.version, BUILD_DATE " " BUILD_TIME, sizeof(uts.version) - 1);
     strncpy(uts.machine, "x86_64", sizeof(uts.machine) - 1);
     strncpy(uts.domainname, "localdomain", sizeof(uts.domainname) - 1);

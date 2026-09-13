@@ -19,7 +19,7 @@
  *   total-commit — `git rev-list --count HEAD` at release time
  *   changes      — number of feature/major changes since last update bump
  *   updates      — number of maintenance releases
- * See versioning.md at the EntoriNext root for the full policy.
+ * See versioning.md in this directory for the full policy.
  */
 #define KERNEL_VERSION "630.0.0"
 
